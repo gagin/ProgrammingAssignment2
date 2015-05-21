@@ -27,7 +27,7 @@
 
 makeCacheMatrix <- function(x = matrix()) {
   # initialize the cached inverse
-  m <- NULL
+  cachedInversed <- NULL
   
   # outside of this exercise it would make sense to check if we received
   # an object of the matrix class indeed, and cry out if we haven't
@@ -37,7 +37,7 @@ makeCacheMatrix <- function(x = matrix()) {
     # let's pass new matrix to object's environment
     x <<- y 
     # matrix's been changed, let's discard cached inverse
-    m <<- NULL 
+    cachedInversed <<- NULL 
   }
   
   # 2. this is a method to return value of the stored matrix
@@ -45,12 +45,12 @@ makeCacheMatrix <- function(x = matrix()) {
   
   # 3. this is a method to store calculated inverse
   # it sets value of cached inverse in higher level enviroment
-  setinverse <- function(inversed) m <<- inversed
+  setinverse <- function(inversed) cachedInversed <<- inversed
   
   # 4. this is a method to retrieve inverse once calculated
   # it's a duty of a calling code to check if it hasn't been yet,
   # and returned value is NULL
-  getinverse <- function() m
+  getinverse <- function() cachedInversed
   
   # this is what our constructor function will return:
   # a list of four named method functions that will access
@@ -59,7 +59,6 @@ makeCacheMatrix <- function(x = matrix()) {
        setinverse = setinverse,
        getinverse = getinverse) 
 }
-
 
 ## The following function calculates the inverse of the special "matrix"
 ## created with the above function. However, it first checks to see if
@@ -72,7 +71,13 @@ makeCacheMatrix <- function(x = matrix()) {
 ## but rather a special object created by the constructor function above.
 ## It will return an object of matrix class though.
 
-cacheSolve <- function(x, ...) {
+cacheSolve <- function(x) {
+
+  ## Please note that optional parameters passing with ellipsis was dropped,
+  ## compared to the example in assignment, because second parameter has to be
+  ## missing in order for solve() to return the inverse (see "?solve"), and
+  ## other parameters don't seem to be relevant. If they affect the result, their
+  ## variability would break the caching, if not - why do we need them.
   
   # let's check if we already have inverse stored
   inversed <- x$getinverse()
@@ -85,14 +90,16 @@ cacheSolve <- function(x, ...) {
   }
   
   # if we are still here, then stored inverse was NA, let's calculate it
+  
   # first, retrieve the original matrix
   original <- x$get() 
-  # then, run solve() function, passing all additional parameters as arguments
-  # this is what was given in our example, although wouldn't it affect results if
-  # parameters were to change, and discredit the whole cached model?
-  inversed <- solve(original, ...)
+  
+  # then, run solve() function
+  inversed <- solve(original)
+  
   # now let's store it in our cacheMatrix object
   x$setinverse(inversed)
+  
   # and return the inverse as well
   inversed 
 }
