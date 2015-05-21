@@ -20,44 +20,79 @@
 ## This 'object' is a list of four object manipulation function serving as its
 ## methods and its environment where both matrix and its reverse are stored.
 
-makeCacheMatrix <- function(x = matrix()) {
 ## Before using this object, initialize it, either passing original matrix
 ## right away as a function parameter, or by using 'set' method like this:
 ##      MyCacheMatrix<-makeCacheMatrix()
 ##      MyCacheMatrix$set(OriginalMatrix)
-  m <- NULL ## initialize the cached inverse
+
+makeCacheMatrix <- function(x = matrix()) {
+  # initialize the cached inverse
+  m <- NULL
+  
+  # outside of this exercise it would make sense to check if we received
+  # an object of the matrix class indeed, and cry out if we haven't
+  
+  # 1. this is a method to initialize or update the source matrix
   set <- function(y) {
-    x <<- y # let's pass new matrix to object's environment
-    m <<- NULL # matrix's been changed, let's discard cached inverse
+    # let's pass new matrix to object's environment
+    x <<- y 
+    # matrix's been changed, let's discard cached inverse
+    m <<- NULL 
   }
-  get <- function() x #what's current cached matrix value?
-  setinverse <- function(solve) m <<- solve #solve is the inversed matrix
-  # let's pass it it our 'object' enviroment to store
+  
+  # 2. this is a method to return value of the stored matrix
+  get <- function() x 
+  
+  # 3. this is a method to store calculated inverse
+  # it sets value of cached inverse in higher level enviroment
+  setinverse <- function(inversed) m <<- inversed
+  
+  # 4. this is a method to retrieve inverse once calculated
+  # it's a duty of a calling code to check if it hasn't been yet,
+  # and returned value is NULL
   getinverse <- function() m
+  
+  # this is what our constructor function will return:
+  # a list of four named method functions that will access
+  # original and inversed matrices stored in this environment 
   list(set = set, get = get,
        setinverse = setinverse,
-       getinverse = getinverse) # return the list of our method functions
+       getinverse = getinverse) 
 }
 
 
 ## The following function calculates the inverse of the special "matrix"
 ## created with the above function. However, it first checks to see if
-## the inversehas already been calculated. If so, it gets the inverse from
+## the inverse has already been calculated. If so, it gets the inverse from
 ## the cache and skips the computation. Otherwise, it calculates the inverse
 ## of the data and sets the value of the inverse in the cache via
 ## the setinverse function.
 
+## The argument of this function is supposed to be not a value of a class matrix,
+## but rather a special object created by the constructor function above.
+## It will return an object of matrix class though.
+
 cacheSolve <- function(x, ...) {
-        ## Return a matrix that is the inverse of 'x',
-        ## where 'x' can't be a matrix but should be special cachable matrix
-        ## object instead.
-  m <- x$getinverse()
-  if(!is.null(m)) { #cached inverse is available, let's get it
+  
+  # let's check if we already have inverse stored
+  inversed <- x$getinverse()
+  
+  # if cached inverse is available, let's return it right away
+  if(!is.null(inversed)) { 
     message("getting cached data")
-    return(m) #mission accomplished, no need to run rest of the function
+    # mission accomplished, no need to run rest of the function
+    return(inversed) 
   }
-  data <- x$get() 
-  m <- solve(data, ...) #if we got here, cache was empty, let's calculate
-  x$setinverse(m) #and remember the inverse in our special cacheMatrix object
-  m #but return the inverse as well
+  
+  # if we are still here, then stored inverse was NA, let's calculate it
+  # first, retrieve the original matrix
+  original <- x$get() 
+  # then, run solve() function, passing all additional parameters as arguments
+  # this is what was given in our example, although wouldn't it affect results if
+  # parameters were to change, and discredit the whole cached model?
+  inversed <- solve(original, ...)
+  # now let's store it in our cacheMatrix object
+  x$setinverse(inversed)
+  # and return the inverse as well
+  inversed 
 }
